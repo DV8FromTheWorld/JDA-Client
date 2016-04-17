@@ -1,0 +1,243 @@
+//NOTE: this is not fully set up!
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id "com.jfrog.bintray" version "1.6"
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+apply plugin: 'eclipse'
+
+def versionObj = new Version(major: 0, minor: 1, revision: 0)
+group = "net.dv8tion"
+archivesBaseName = "JDA-Client"
+version = "$versionObj"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.eclipse.dependsOn(cleanEclipse)
+
+def filteredSourceDir = file("$buildDir/filtered")
+
+// This is to fix eclipse's stupidity when first setting up the project.
+// It thinks that "filtered" should be a development source folder and cries when it doesn't exist (gradlew clean)
+eclipse {
+    classpath {
+        file {
+            withXml {
+                def sb = it.asString()
+                sb.replace(0, sb.length(), sb.toString().replace("\n\t<classpathentry kind=\"src\" path=\"build/filtered\"/>", ""));
+            }
+        }
+    }
+}
+
+
+sourceSets {
+    // This source set will contain all sources that we filter (version-strings replaced; used in building)
+    filtered {
+        java {
+            srcDirs = [
+                filteredSourceDir,
+                "src/test/java",
+                "src/examples/java"
+            ]
+        }
+    }
+}
+
+javadoc {
+    failOnError = false
+
+    //### excludes ###
+}
+
+// copy the main sources and filter any '@buildVersion@' occurences. 
+task processVersion (type: Copy) {
+    from sourceSets.main.java
+    into filteredSourceDir
+    filter(ReplaceTokens, tokens: [
+        versionMajor: versionObj.major.toString(),
+        versionMinor: versionObj.minor.toString(),
+        versionRevision: versionObj.revision.toString(),
+        versionBuild: versionObj.build.toString()
+    ])
+}
+
+jar {
+    baseName = project.name
+    manifest {
+        attributes 'Implementation-Version': version
+    }
+    from filteredSourceDir
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from filteredSourceDir
+}
+
+// create a single Jar with all dependencies
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Version': version
+    }
+    
+    baseName = project.name + '-withDependencies'
+    from { 
+        configurations.compile.collect {
+            dependency ->
+            if (dependency.directory) { // If it is a folder, just include the folder in its entirety
+                return dependency
+            } else {    // If it isn't a folder, put it in a zipTree. if it is a zip or jar the contents will be extracted.
+                return zipTree(dependency)
+            }
+        }
+    }
+    with jar
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+repositories {
+    jcenter()
+}
+
+//TODO: fill in correct jda-version
+dependencies {
+    //compile 'net.dv8tion:JDA:1.4.0_238'
+}
+
+class Version {
+    int major, minor, revision
+
+    String getBuild() {
+        System.getenv("BUILD_NUMBER") ?: System.getProperty("BUILD_NUMBER") ?: "DEV"
+    }
+
+    String toString() {
+        "${major}.${minor}.${revision}_$build"
+    }
+}
+
+uploadArchives {
+      onlyIf {
+        System.getenv("BUILD_NUMBER")
+      }
+      repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+        
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+        
+            pom.project {
+                name 'JDA-Client'
+                packaging 'jar'
+                // optionally artifactId can be defined here 
+                description 'A wrapping of the Discord REST api and its Websocket-Events for Java.'
+                url 'https://github.com/DV8FromTheWorld/JDA-Client'
+        
+                scm {
+                    connection 'scm:git:git@github.com:DV8FromTheWorld/JDA-Client.git'
+                    developerConnection 'scm:git:git@github.com:DV8FromTheWorld/JDA-Client.git'
+                    url 'scm:git:git@github.com:DV8FromTheWorld/JDA-Client.git'
+                }
+        
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+        
+                developers {
+                    developer {
+                        id 'DV8FromTheWorld'
+                        name 'Austin Keener'
+                        email 'keeneraustin@yahoo.com'
+                    }
+                    developer {
+                        id 'Kantekugel'
+                        name 'Michael Ritter'
+                        email 'ritter.michael92@gmail.com'
+                    }
+                }
+            }.withXml {
+                //If we use a repository that isn't just MavenCentral
+                if (project.repositories.size() > 1)
+                {
+                    int i = 0
+                    def reposNode = asNode().appendNode("repositories")
+                    project.repositories.each { repo ->
+                        //Ignore the MavenCentral repository. Don't need to add it.
+                        if (!("https://repo1.maven.org/maven2/" == repo.properties["url"]))
+                        {
+                            def repoNode = reposNode.appendNode("repository")
+                            repoNode.appendNode("id", "JDA-repo-" + i)
+                            repoNode.appendNode("name", "JDA Repo " + i)
+                            repoNode.appendNode("url", repo.properties["url"]);
+                            i++
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = bintrayUsername
+    key = bintrayApiKey
+    pkg {
+        repo = 'maven'
+        name = 'JDA-Client'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/DV8FromTheWorld/JDA-Client.git'
+        configurations = ['archives']
+        publish = true
+        version {
+            name = project.version
+            released = new Date()
+        }
+    }
+}
+
+bintrayUpload {
+    onlyIf {
+        System.getenv("BUILD_NUMBER")
+    }
+}
+
+// tell the compileJava task to compile the filtered source 
+compileJava.source = sourceSets.filtered.java
+compileJava.dependsOn processVersion
+
+// Creates the w/ dependencies jar.
+uploadArchives.dependsOn fatJar
+bintrayUpload.dependsOn uploadArchives
+
+// If we don't have the username and password for uploading, we probably also
+// can't sign the archives, so skip these tasks.
+signArchives.onlyIf { !ossrhUsername.empty && !ossrhPassword.empty }
+uploadArchives.onlyIf { !ossrhUsername.empty && !ossrhPassword.empty }
+bintrayUpload.onlyIf { !bintrayUsername.empty && !bintrayApiKey.empty }
