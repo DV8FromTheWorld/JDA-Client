@@ -83,7 +83,7 @@ task javadocJar(type: Jar) {
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
-    from filteredSourceDir
+    from sourceSets.filtered.java
 }
 
 // create a single Jar with all dependencies
@@ -117,9 +117,8 @@ repositories {
     jcenter()
 }
 
-//TODO: fill in correct jda-version
 dependencies {
-    //compile 'net.dv8tion:JDA:1.4.0_238'
+    compile 'net.dv8tion:JDA:2.0.0_243'
 }
 
 class Version {
