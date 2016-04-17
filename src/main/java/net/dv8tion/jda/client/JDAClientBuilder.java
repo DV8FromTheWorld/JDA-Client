@@ -58,6 +58,7 @@ public class JDAClientBuilder extends JDABuilder
     @Override
     public JDA buildAsync() throws LoginException, IllegalArgumentException
     {
+        //call login here to fetch token (buildBlocking calls this so we should be fine)
         login();
         return super.buildAsync();
     }
@@ -65,7 +66,7 @@ public class JDAClientBuilder extends JDABuilder
     @Override
     public JDA buildBlocking() throws LoginException, IllegalArgumentException, InterruptedException
     {
-        login();
+        //will return JDAClient instead of JDA
         return super.buildBlocking();
     }
 
