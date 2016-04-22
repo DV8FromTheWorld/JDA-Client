@@ -52,7 +52,7 @@ public class JDAClientBuilder extends JDABuilder
     @Override
     public JDABuilder setBotToken(String botToken)
     {
-        throw new UnsupportedOperationException("Bot-tokens are now allowed for JDA-Client!");
+        throw new UnsupportedOperationException("Bot-tokens are not allowed for JDA-Client!");
     }
 
     @Override
