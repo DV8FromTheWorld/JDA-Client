@@ -17,7 +17,7 @@
 package net.dv8tion.jda.client;
 
 /**
- * Contains information to this specific build of JDA.
+ * Contains information to this specific build of JDA-Client.
  */
 public class JDAClientInfo
 {
