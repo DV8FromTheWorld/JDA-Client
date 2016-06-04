@@ -100,7 +100,7 @@ public class JDAClientBuilder extends JDABuilder
             {
                 if(code == null)
                     throw new LoginException("Given account is protected with Two-Factor Authentication. Please provide a valid code.")
-                String ticket = new JSONObject(response.getBody()).getString("ticket");
+                String ticket = obj.getString("ticket");
                 
                 response = Unirest.post(Requester.DISCORD_API_PREFIX + "auth/mfa/totp")
                     .header("Content-Type", "application/json")
