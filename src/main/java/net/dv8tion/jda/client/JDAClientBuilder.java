@@ -94,7 +94,7 @@ public class JDAClientBuilder extends JDABuilder
             if(response.getStatus() < 200 || response.getStatus() > 299)
                 throw new LoginException("Email/Password combination was incorrect | Local IP is not registered yet. Server responded with: " + response.getStatus() + " - " + response.getBody());
             JSONObject obj = new JSONObject(response.getBody());
-            if(!obj.getBoolean("mfa"))
+            if((!obj.has("mfa") && obj.has("token")) || !obj.getBoolean("mfa"))
                 token = obj.getString("token");
             else // We have to request a token using the given code because the account has two factor authentication enabled.
             {
