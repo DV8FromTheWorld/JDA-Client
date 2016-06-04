@@ -31,6 +31,7 @@ public class JDAClientBuilder extends JDABuilder
 {
     protected String email = null;
     protected String password = null;
+    protected String code = null;
 
     public JDAClientBuilder()
     {
@@ -46,6 +47,12 @@ public class JDAClientBuilder extends JDABuilder
     public JDAClientBuilder setPassword(String password)
     {
         this.password = password;
+        return this;
+    }
+    
+    public JDAClientBuilder setCode(String code)
+    {
+        this.code = code;
         return this;
     }
 
@@ -86,7 +93,27 @@ public class JDAClientBuilder extends JDABuilder
                     .asString();
             if(response.getStatus() < 200 || response.getStatus() > 299)
                 throw new LoginException("Email/Password combination was incorrect. server responded with: " + response.getStatus() + " - " + response.getBody());
-            token = new JSONObject(response.getBody()).getString("token");
+            JSONObject obj = new JSONObject(response.getBody());
+            if(!obj.getBoolean("mfa"))
+                token = obj.getString("token");
+            else // We have to request a token using the given code because the account has two factor authentication enabled.
+            {
+                if(code == null)
+                    throw new LoginException("Given account is protected with Two-Factor Authentication. Please provide a valid code.")
+                String ticket = new JSONObject(response.getBody()).getString("ticket");
+                
+                response = Unirest.post(Requester.DISCORD_API_PREFIX + "auth/mfa/totp")
+                    .header("Content-Type", "application/json")
+                    .header("user-agent", Requester.USER_AGENT)
+                    .body(new JSONObject()
+                            .put("code", code) // The two factor code
+                            .put("ticket", ticket) // The ticket returned by discord
+                            .toString())
+                    .asString());
+                if(response.getStatus() < 200 || response.getStatus() > 299)
+                    throw new LoginException("The given code or the ticket returned by discord was incorrect. server responded with: " + response.getStatus() + " - " + response.getBody());
+                token = new JSONObject(response.getBody()).getString("token");
+            }
         }
         catch (UnirestException e)
         {
