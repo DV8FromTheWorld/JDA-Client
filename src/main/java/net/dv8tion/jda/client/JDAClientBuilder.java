@@ -92,7 +92,7 @@ public class JDAClientBuilder extends JDABuilder
                             .toString())
                     .asString();
             if(response.getStatus() < 200 || response.getStatus() > 299)
-                throw new LoginException("Email/Password combination was incorrect. server responded with: " + response.getStatus() + " - " + response.getBody());
+                throw new LoginException("Email/Password combination was incorrect | Local IP is not registered yet. Server responded with: " + response.getStatus() + " - " + response.getBody());
             JSONObject obj = new JSONObject(response.getBody());
             if(!obj.getBoolean("mfa"))
                 token = obj.getString("token");
@@ -109,9 +109,9 @@ public class JDAClientBuilder extends JDABuilder
                             .put("code", code) // The two factor code
                             .put("ticket", ticket) // The ticket returned by discord
                             .toString())
-                    .asString());
+                    .asString();
                 if(response.getStatus() < 200 || response.getStatus() > 299)
-                    throw new LoginException("The given code or the ticket returned by discord was incorrect. server responded with: " + response.getStatus() + " - " + response.getBody());
+                    throw new LoginException("The given code or the ticket returned by discord was incorrect. Server responded with: " + response.getStatus() + " - " + response.getBody());
                 token = new JSONObject(response.getBody()).getString("token");
             }
         }
