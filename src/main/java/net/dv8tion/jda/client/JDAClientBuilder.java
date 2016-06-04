@@ -99,7 +99,7 @@ public class JDAClientBuilder extends JDABuilder
             else // We have to request a token using the given code because the account has two factor authentication enabled.
             {
                 if(code == null)
-                    throw new LoginException("Given account is protected with Two-Factor Authentication. Please provide a valid code.")
+                    throw new LoginException("Given account is protected with Two-Factor Authentication. Please provide a valid code.");
                 String ticket = obj.getString("ticket");
                 
                 response = Unirest.post(Requester.DISCORD_API_PREFIX + "auth/mfa/totp")
