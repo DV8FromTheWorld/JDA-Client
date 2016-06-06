@@ -42,7 +42,7 @@ public class ClientAccountManager extends AccountManager
      * @return
      * 	  this
      */
-    public AccountManager setEmail(String email)
+    public ClientAccountManager setEmail(String email)
     {
         this.email = email;
         return this;
@@ -57,10 +57,22 @@ public class ClientAccountManager extends AccountManager
      * @return
      * 	  this
      */
-    public AccountManager setPassword(String password)
+    public ClientAccountManager setPassword(String password)
     {
         this.newPassword = password;
         return this;
+    }
+
+    @Override
+    public ClientAccountManager setUsername(String username)
+    {
+        return (ClientAccountManager) super.setUsername(username);
+    }
+
+    @Override
+    public ClientAccountManager setAvatar(AvatarUtil.Avatar avatar)
+    {
+        return (ClientAccountManager) super.setAvatar(avatar);
     }
 
     /**
