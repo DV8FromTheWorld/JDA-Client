@@ -72,7 +72,7 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
         {
             HttpResponse<String> response = Unirest.post(Requester.DISCORD_API_PREFIX + "auth/login")
                     .header("Content-Type", "application/json")
-                    .header("user-agent", Requester.USER_AGENT)
+                    .header("user-agent", ClientRequester.LOGIN_USER_AGENT)
                     .body(new JSONObject()
                             .put("email", email)
                             .put("password", password)
@@ -91,7 +91,7 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
 
                 response = Unirest.post(Requester.DISCORD_API_PREFIX + "auth/mfa/totp")
                         .header("Content-Type", "application/json")
-                        .header("user-agent", Requester.USER_AGENT)
+                        .header("user-agent", ClientRequester.LOGIN_USER_AGENT)
                         .body(new JSONObject()
                                 .put("code", twoFactorAuthCode) // The two factor code
                                 .put("ticket", ticket) // The ticket returned by discord

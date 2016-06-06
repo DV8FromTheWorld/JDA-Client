@@ -22,6 +22,7 @@ import net.dv8tion.jda.requests.Requester;
 
 public class ClientRequester extends Requester
 {
+    public static  String LOGIN_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.19 Chrome/49.0.2623.75 Discord PTB/0.37.6 Safari/537.36";
     public static String CLIENT_USER_AGENT = "JDA-Client DiscordBot (" + JDAClientInfo.GITHUB + ", " + JDAClientInfo.VERSION + ")";
 
     public ClientRequester(JDAImpl api)
