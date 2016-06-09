@@ -30,10 +30,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
@@ -65,7 +67,7 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
 
     public void login(String email, String password, String twoFactorAuthCode) throws LoginException
     {
-        String token = null;
+        String token;
         if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty())
             throw new LoginException("Email or Password were null or empty");
         try
@@ -102,7 +104,21 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
                 token = new JSONObject(response.getBody()).getString("token");
             }
 
-            //TODO: Implement token caching. Old Source: https://github.com/DV8FromTheWorld/JDA/blob/16e5b09c8281f2dfe565db19b08f66259f5a0f12/src/main/java/net/dv8tion/jda/entities/impl/JDAImpl.java
+            File tokenFile = new File("tokens.json");
+            JSONObject tokenObj = new JSONObject();
+
+            if(tokenFile.exists())
+                tokenObj = readJson(Paths.get("tokens.json")); // Retrieve token object to override
+
+            if(tokenObj == null)
+            {
+                LOG.warn("Object contained in tokens.json was malformed!");
+                tokenObj = new JSONObject();
+            }
+
+            tokenObj.put(email, token);
+            writeJson(Paths.get("tokens.json"), tokenObj); // Override json file with new token
+
             login(token, null);
         }
         catch (UnirestException e)
