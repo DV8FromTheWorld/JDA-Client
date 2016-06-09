@@ -67,9 +67,31 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
 
     public void login(String email, String password, String twoFactorAuthCode) throws LoginException
     {
-        String token;
         if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty())
             throw new LoginException("Email or Password were null or empty");
+
+        String token = null;
+        File tokenFile = new File("tokens.json");
+        JSONObject tokenObj = new JSONObject();
+
+        if(tokenFile.exists())
+        {
+            tokenObj = readJson(Paths.get("tokens.json"));
+            if(tokenObj != null && tokenObj.has(email) && !tokenObj.isNull(email))
+            {
+                token = tokenObj.getString(email);
+            }
+        }
+
+        if(token != null)
+        {
+            if(validate(token))
+            {
+                login(token, null);
+                return;
+            }
+        }
+
         try
         {
             HttpResponse<String> response = Unirest.post(Requester.DISCORD_API_PREFIX + "auth/login")
@@ -103,9 +125,6 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
                     throw new LoginException("The given code or the ticket returned by discord was incorrect. Server responded with: " + response.getStatus() + " - " + response.getBody());
                 token = new JSONObject(response.getBody()).getString("token");
             }
-
-            File tokenFile = new File("tokens.json");
-            JSONObject tokenObj = new JSONObject();
 
             if(tokenFile.exists())
                 tokenObj = readJson(Paths.get("tokens.json")); // Retrieve token object to override
