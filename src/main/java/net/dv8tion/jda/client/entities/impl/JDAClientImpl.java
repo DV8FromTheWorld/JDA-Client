@@ -85,9 +85,13 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
 
         if(token != null)
         {
-            verifyToken(token);
-            login(token, null);
-            return;
+            try
+            {
+                login(token, null);
+                return;
+            } catch (LoginException ignored)
+            {
+            }
         }
 
         try
