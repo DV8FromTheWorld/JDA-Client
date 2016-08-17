@@ -41,15 +41,15 @@ import java.util.Arrays;
 
 public class JDAClientImpl extends JDAImpl implements JDAClient
 {
-    public JDAClientImpl(boolean enableAudio, boolean useShutdownHook)
+    public JDAClientImpl(boolean enableAudio, boolean useShutdownHook, boolean enableBulkDeleteSplitting)
     {
-        super(enableAudio, useShutdownHook);
+        super(enableAudio, useShutdownHook, enableBulkDeleteSplitting);
         requester = new ClientRequester(this);
     }
 
-    public JDAClientImpl(String proxyUrl, int proxyPort, boolean enableAudio, boolean useShutdownHook)
+    public JDAClientImpl(String proxyUrl, int proxyPort, boolean enableAudio, boolean useShutdownHook, boolean enableBulkDeleteSplitting)
     {
-        super(proxyUrl, proxyPort, enableAudio, useShutdownHook);
+        super(proxyUrl, proxyPort, enableAudio, useShutdownHook, enableBulkDeleteSplitting);
         requester = new ClientRequester(this);
     }
 
@@ -85,11 +85,9 @@ public class JDAClientImpl extends JDAImpl implements JDAClient
 
         if(token != null)
         {
-            if(validate(token))
-            {
-                login(token, null);
-                return;
-            }
+            verifyToken(token);
+            login(token, null);
+            return;
         }
 
         try

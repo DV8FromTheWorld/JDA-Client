@@ -55,6 +55,7 @@ public class JDAClientBuilder
     protected boolean enableVoice = true;
     protected boolean enableShutdownHook = true;
     protected boolean useAnnotatedManager = false;
+    protected boolean enableBulkDeleteSplitting = true;
     protected IEventManager eventManager = null;
     protected boolean reconnect = true;
 
@@ -286,6 +287,24 @@ public class JDAClientBuilder
     }
 
     /**
+     * If enabled, JDA will separate the bulk delete event into individual delete events, but this isn't as efficient as
+     * handling a single event would be. It is recommended that BulkDelete Splitting be disabled and that the developer
+     * should instead handle the {@link net.dv8tion.jda.events.message.MessageBulkDeleteEvent MessageBulkDeleteEvent}
+     * <p>
+     * Default: <b>true (enabled)</b>
+     *
+     * @param enabled
+     *          True - The MESSAGE_DELTE_BULK will be split into multiple individual MessageDeleteEvents.
+     * @return
+     *       Returns the {@link net.dv8tion.jda.JDABuilder JDABuilder} instance. Useful for chaining.
+     */
+    public JDAClientBuilder setBulkDeleteSplittingEnabled(boolean enabled)
+    {
+        this.enableBulkDeleteSplitting = enabled;
+        return this;
+    }
+
+    /**
      * Builds a new {@link net.dv8tion.jda.JDA} instance and uses the provided email and password to start the login process.<br>
      * The login process runs in a different thread, so while this will return immediately, {@link net.dv8tion.jda.JDA} has not
      * finished loading, thus many {@link net.dv8tion.jda.JDA} methods have the chance to return incorrect information.
@@ -306,9 +325,9 @@ public class JDAClientBuilder
         jdaCreated = true;
         JDAClientImpl client;
         if (proxySet)
-            client = new JDAClientImpl(proxyUrl, proxyPort, enableVoice, enableShutdownHook);
+            client = new JDAClientImpl(proxyUrl, proxyPort, enableVoice, enableShutdownHook, enableBulkDeleteSplitting);
         else
-            client = new JDAClientImpl(enableVoice, enableShutdownHook);
+            client = new JDAClientImpl(enableVoice, enableShutdownHook, enableBulkDeleteSplitting);
         client.setAutoReconnect(reconnect);
         if (eventManager != null)
         {
